@@ -3,3 +3,7 @@
 __pycache__/
 node_modules/
 *.pyc
+
+backend/notes.md
+
+backend/notes.md
