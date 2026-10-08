@@ -2,6 +2,15 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
+import Expenses from './pages/Expenses'
+
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem('token')
+  if (!token) {
+    return <Navigate to="/login" replace />
+  }
+  return children
+}
 
 function App() {
   return (
@@ -9,7 +18,22 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/expenses"
+          element={
+            <ProtectedRoute>
+              <Expenses />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

@@ -1,14 +1,23 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate} from 'react-router-dom'
+import { registerUser} from '../services/api'
 
 function Register() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError]  = useState('')
+  const navigate = useNavigate()
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    console.log('Register attempt:', { name, email, password })
+    setError('')
+    try {
+      await registerUser(name, email, password)
+      navigate('/login')
+    }catch (err) {
+      setError(err.message)
+    }
   }
 
   return (
@@ -20,6 +29,13 @@ function Register() {
         <h1 className="text-2xl font-semibold mb-6 text-slate-800">
           Créer un compte
         </h1>
+
+        {error && (
+          <p className="mb-4 text-sm text-red-600 bg-red-50 p-2 rounded">
+            {error}
+          </p>
+        )}
+
 
         <label className="block mb-4">
           <span className="text-sm text-slate-600">Nom</span>

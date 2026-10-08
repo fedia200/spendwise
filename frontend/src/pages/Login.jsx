@@ -1,24 +1,36 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-
+import { Link, useNavigate } from 'react-router-dom'
+import { loginUser } from '../services/api'
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    console.log('Login attempt:', { email, password })
+    setError('')
+    try {
+      const data = await loginUser(email, password)
+      localStorage.setItem('token', data.access_token)
+      navigate('/dashboard')
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm bg-white p-8 rounded-lg shadow-md"
-      >
+      <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white p-8 rounded-lg shadow-md">
         <h1 className="text-2xl font-semibold mb-6 text-slate-800">
           Connexion à SpendWise
         </h1>
+
+        {error && (
+          <p className="mb-4 text-sm text-red-600 bg-red-50 p-2 rounded">
+            {error}
+          </p>
+        )}
 
         <label className="block mb-4">
           <span className="text-sm text-slate-600">Email</span>
