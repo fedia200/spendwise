@@ -9,8 +9,17 @@ from app.schemas.user import UserCreate, UserOut, Token
 from app.database.models import User
 from app.core.security import hash_password, verify_password, create_access_token
 from app.core.dependencies import get_current_user
+from fastapi.middleware.cors import CORSMiddleware
+import pandas as pd
 
 app = FastAPI(title="SpendWise API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/health")
 def health():
@@ -99,6 +108,79 @@ def delete_expense(
   db.delete(expense)
   db.commit()
   return {"detail" : "Expense deleted"}
+@app.get("/analytics/summary")
+def get_summary(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    expenses = db.query(Expense).filter(Expense.user_id == current_user.id).all()
+
+    if not expenses:
+        return {
+            "total_spent": 0,
+            "transaction_count": 0,
+            "top_category": None,
+            "top_category_amount": 0,
+        }
+
+    data = [{"amount": e.amount, "category": e.category} for e in expenses]
+    df = pd.DataFrame(data)
+
+    total_spent = df["amount"].sum()
+    transaction_count = len(df)
+
+    category_totals = df.groupby("category")["amount"].sum()
+    top_category = category_totals.idxmax()
+    top_category_amount = category_totals.max()
+
+    return {
+        "total_spent": float(total_spent),
+        "transaction_count": int(transaction_count),
+        "top_category": top_category,
+        "top_category_amount": float(top_category_amount),
+    }
+    
+@app.get("/analytics/categories")
+def get_categories_breakdown(
+  db: Session = Depends(get_db),
+  current_user: User = Depends(get_current_user),
+):
+  expenses = db.query(Expense).filter(Expense.user_id == current_user.id).all()
+  
+  if not expenses:
+    return []
+    
+  data = [{"amount": e.amount, "category": e.category} for e in expenses]
+  df = pd.DataFrame(data)
+  
+  category_totals = df.groupby("category")["amount"].sum()
+  
+  return [
+    {'category': cat, "amount": float(amount)}
+    for cat, amount in category_totals.items()
+  ]
+  
+@app.get("/analytics/monthly")
+def get_monthly_breakdown(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    expenses = db.query(Expense).filter(Expense.user_id == current_user.id).all()
+
+    if not expenses:
+        return []
+
+    data = [{"amount": e.amount, "date": e.date} for e in expenses]
+    df = pd.DataFrame(data)
+
+    df["month"] = pd.to_datetime(df["date"]).dt.to_period("M").astype(str)
+    monthly_totals = df.groupby("month")["amount"].sum().sort_index()
+
+    return [
+        {"month": month, "amount": float(amount)}
+        for month, amount in monthly_totals.items()
+    ]
+    
 
 @app.post("/auth/register", response_model=UserOut)
 def register(user: UserCreate, db: Session = Depends(get_db)):
