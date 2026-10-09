@@ -83,3 +83,26 @@ export async function deleteExpense(id) {
 
   return response.json();
 }
+
+export async function getSummary() {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/analytics/summary`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Erreur lors du chargement du résumé");
+  return response.json();
+}
+
+export async function getCategoriesBreakdown() {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/analytics/categories`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Erreur lors du chargement des catégories");
+  return response.json();
+}
+
+
+
+
+
