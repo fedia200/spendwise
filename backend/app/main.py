@@ -11,6 +11,7 @@ from app.core.security import hash_password, verify_password, create_access_toke
 from app.core.dependencies import get_current_user
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
+from app.routers import ml, import_csv
 
 app = FastAPI(title="SpendWise API")
 app.add_middleware(
@@ -20,6 +21,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(ml.router)
+app.include_router(import_csv.router)
 
 @app.get("/health")
 def health():
