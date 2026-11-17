@@ -102,6 +102,23 @@ export async function getCategoriesBreakdown() {
   return response.json();
 }
 
+export async function getForecast(){
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/ml/forecast`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Erreur lors du chargement de la prévision");
+  return response.json();
+}
+
+export async function getAnomalies(){
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_URL}/ml/anomalies`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Erreur lors du chargment des anamolies");
+  return response.json();
+}
 
 
 
